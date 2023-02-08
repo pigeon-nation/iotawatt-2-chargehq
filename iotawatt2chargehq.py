@@ -28,7 +28,7 @@ data['apiKey'] = api_key
 data['siteMeters'] = {}
 data['siteMeters']['production_kw'] = round( g.json()[0][1] / 1000, 3)
 data['siteMeters']['net_import_kw'] = round( g.json()[0][0] / 1000, 3)
-data['siteMeters']['consumption_kw'] = round((g.json()[0][1] + g.json()[0][0])/1000,3)
+data['siteMeters']['consumption_kw'] = round( sum(g.json()[0])/1000,3)
 
 # Posting to CHQ
 payload = json.dumps(data)
