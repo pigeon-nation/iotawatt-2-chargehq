@@ -13,10 +13,10 @@ __license__ = "MIT"
 
 # Arguments
 my_parser = argparse.ArgumentParser(description="Update ChargeHQ from IoTaWatt")
-my_parser.add_argument( "--ip", metavar="IP address", type=str, help="IP Address of IoTaWatt" )
-my_parser.add_argument( "--grid", metavar="Net grid import", type=str, help="Net import from Grid (kW)")
-my_parser.add_argument( "--production", metavar="PV production", type=str, help="PV production (kW)")
-my_parser.add_argument( "--key", metavar="API key", type=str, help="ChargeHQ API key")
+my_parser.add_argument( "--ip", metavar="IP address", type=str, help="IP Address of IoTaWatt", required=True )
+my_parser.add_argument( "--grid", metavar="Net grid import", type=str, help="Net import from Grid (kW)", required=True )
+my_parser.add_argument( "--production", metavar="PV production", type=str, help="PV production (kW)", required=True)
+my_parser.add_argument( "--key", metavar="API key", type=str, help="ChargeHQ API key", required=True)
 
 args = my_parser.parse_args()
 
@@ -42,4 +42,3 @@ p = requests.post( chq_url, data=payload, headers=header)
 
 #print(payload, p.text)
 logging.info(payload, p.text)
-
