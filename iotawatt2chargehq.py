@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys, os
 import locale
 import json
@@ -29,16 +28,21 @@ g = requests.get( "http://{}/query".format(args.ip), params = "select=[{}.watts,
 #Assembling json
 data = {}
 data['apiKey'] = args.key
-data['siteMeters'] = {}
-data['siteMeters']['production_kw'] = round( g.json()[0][1] / 1000, 3)
-data['siteMeters']['net_import_kw'] = round( g.json()[0][0] / 1000, 3)
-data['siteMeters']['consumption_kw'] = round( sum(g.json()[0])/1000,3)
+if g.status_code == 200:
+   logging.info("Iotawatt collection successful")
+   data['siteMeters'] = {}
+   data['siteMeters']['production_kw'] = round( g.json()[0][1] / 1000, 3)
+   data['siteMeters']['net_import_kw'] = round( g.json()[0][0] / 1000, 3)
+   data['siteMeters']['consumption_kw'] = round( sum(g.json()[0])/1000,3)
+else:
+   data['error'] = "Collection error: " +g.reason
 
 # Posting to CHQ
 payload = json.dumps(data)
 header = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
 p = requests.post( chq_url, data=payload, headers=header)
-
+if p.status_code != 200:
+   logging.warning("ChargeHQ API error: " + p.reason)
 #print(payload, p.text)
 logging.info(payload, p.text)
