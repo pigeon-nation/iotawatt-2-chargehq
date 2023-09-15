@@ -1,3 +1,7 @@
+# This code was written as a response to the issue stated by {info-remioved} this morning. Apparently you have been having some issues, and needed error handling for the requests. 
+# This code was written by Pigeon Nation. (GH: pigeon-nation :: pigeon-nation.github.io).
+# Copyright remains with Darek Margas.
+
 import sys, os
 import locale
 import json
@@ -5,6 +9,10 @@ import requests
 import argparse
 import logging
 import time
+
+# A quick recreation of print(...), but with sys.stderr as the "file" parameter.
+def show_error(text):
+   logging.error(text)
 
 __author__ = "Darek Margas"
 __copyright__ = "Copyright 2023, Darek Margas"
@@ -23,9 +31,43 @@ args = my_parser.parse_args()
 chq_url = 'https://api.chargehq.net/api/public/push-solar-data'
 
 # Getting data
-g = requests.get( "http://{}/query".format(args.ip), params = "select=[{}.watts,{}.watts]&begin=s-1m&end=s&group=all&header=no".format(args.grid, args.production), timeout=15)
+try:
+   g = requests.get( "http://{}/query".format(args.ip), params = "select=[{}.watts,{}.watts]&begin=s-1m&end=s&group=all&header=no".format(args.grid, args.production), timeout=15)
+except requests.exceptions.Timeout: # todo: specific error handling
+   show_error('Timeout.')
+   sys.exit(1) # Exit, status code 1.
+except requests.exceptions.HTTPError:
+   show_error('HTTP Error.')
+   sys.exit(1) # Exit, status code 1.
+except requests.exceptions.ConnectionError:
+   show_error('Connection Error - Could not connect. ')
+   sys.exit(1) # Exit, status code 1.
+except requests.exceptions.SSLError as expt:
+   show_error('SSL Error.')
+   show_error('More Details: ')
+   # Show the origional error, but exit in a controlled manner.
+   try:
+      raise Exception('SSL Error Details.')
+   except:
+      raise expt
+   finally:
+      sys.exit(1) # Exit, status code 1.
+except requests.exceptions.InvalidURL:
+   show_error('Invalid URL.')
+   show_error('Attempted URL: ' + "http://{}/query".format(args.ip))
+   sys.exit(1)
+except Exception as expt: # If all else fails.
+   show_error('Unknown Error.')
+   show_error('More Details: ')
+   # Show the origional error, but exit in a controlled manner.
+   try:
+      raise Exception('Error Details.')
+   except:
+      raise expt
+   finally:
+      sys.exit(1) # Exit, status code 1.
 
-#Assembling json
+# Assembling json
 data = {}
 data['apiKey'] = args.key
 if g.status_code == 200:
@@ -41,8 +83,44 @@ else:
 payload = json.dumps(data)
 header = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
-p = requests.post( chq_url, data=payload, headers=header)
+try:
+   p = requests.post( chq_url, data=payload, headers=header)
+except requests.exceptions.Timeout: # todo: specific error handling
+   show_error('Timeout.')
+   sys.exit(1) # Exit, status code 1.
+except requests.exceptions.HTTPError:
+   show_error('HTTP Error.')
+   sys.exit(1) # Exit, status code 1.
+except requests.exceptions.ConnectionError:
+   show_error('Connection Error - Could not connect. ')
+   sys.exit(1) # Exit, status code 1.
+except requests.exceptions.SSLError as expt:
+   show_error('SSL Error.')
+   show_error('More Details: ')
+   # Show the origional error, but exit in a controlled manner.
+   try:
+      raise Exception('SSL Error Details.')
+   except:
+      raise expt
+   finally:
+      sys.exit(1) # Exit, status code 1.
+except requests.exceptions.InvalidURL:
+   show_error('Invalid URL.')
+   show_error('Attempted URL: ' + chq_url)
+   sys.exit(1)
+except Exception as expt: # If all else fails.
+   show_error('Unknown Error.')
+   show_error('More Details: ')
+   # Show the origional error, but exit in a controlled manner.
+   try:
+      raise Exception('Error Details.')
+   except:
+      raise expt
+   finally:
+      sys.exit(1) # Exit, status code 1.
+
 if p.status_code != 200:
    logging.warning("ChargeHQ API error: " + p.reason)
+
 #print(payload, p.text)
 logging.info(payload, p.text)
